@@ -20,7 +20,7 @@
 #ifndef TABCONTAINER_H
 #define TABCONTAINER_H
 #include <QTabWidget>
-#include "sensortab.h"
+#include "sensorsgui.h"
 #include "navigationtab.h"
 class TabContainer : public QTabWidget
 {
@@ -28,10 +28,12 @@ Q_OBJECT
     public:
 	TabContainer(QWidget *parent = 0);
 	//void setMapManager(QTMapDataInterface *mapManager); 
+	void setCommManager(CommManager *commManager); 
 	~TabContainer();
     private:
-	SensorContainer senCon;
+    CommManager *comManager;
 	NavContainer navCon;
+	SensorsGui sensorGui;
 };
 
 #endif
