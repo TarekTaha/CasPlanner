@@ -30,7 +30,8 @@
 #include "tasksgui.h"
 #include "navigationtab.h"
 #include "mapviewer.h"
-#include "planningparameterstab.h"
+#include "planningtab.h"
+#include "hritab.h"
 
 class TabContainer : public QTabWidget
 {
@@ -41,8 +42,9 @@ Q_OBJECT
 		~TabContainer();
     public:
     	PlayGroundTab*playGroundTab;
-	    PlayGround   *playGround;
-	    PlanningParametersTab *planningParametersTab;
+	    PlanningTab *planningTab;
+	    HriTab		*hriTab;
+    	PlayGround   *playGround;
 		NavContainer *navCon;
 		TasksGui *tasksGui;
 		MapViewer *mapViewer;
