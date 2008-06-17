@@ -40,14 +40,14 @@ using namespace PlayerCc;
 class MapProvider
 {
     public:
-        virtual Map provideMap()=0; 
+        virtual void provideMap(Map&)=0; 
         virtual ~MapProvider(){};
 };
 
 class LaserProvider 
 {
     public:
-        virtual LaserScan getLaserScan()=0; 
+        virtual void getLaserScan(LaserScan&)=0; 
         virtual ~LaserProvider(){}; 
 };
 
