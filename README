@@ -45,14 +45,15 @@ The image builds Player and Stage itself. It does not use distribution Player pa
 
 Running with Docker
 -------------------
-From the project root, once per login:
+From a graphical session, in the project root:
 
-        $ xhost +local:root
         $ docker compose up --build
 
-That builds `casplanner:local`, starts Stage with `StageSim/casarea.cfg`, and opens
-CasPlanner on `wheelchair.cfg`. Two windows should appear: the Stage world
-(`cas.world`) and `CAS Navigation System`.
+Compose forwards `DISPLAY` and the login cookie in `XAUTHORITY`, so the
+containers can open windows without `xhost`. That builds `casplanner:local`,
+starts Stage with `StageSim/casarea.cfg`, and opens CasPlanner on
+`wheelchair.cfg`. Two windows should appear: the Stage world (`cas.world`)
+and `CAS Navigation System`.
 
 `wheelchair.cfg` leaves `startConnected` at 0, so click Connect Robot after both
 windows are up. The client talks to Player on `127.0.0.1:6665`. Stage also listens
