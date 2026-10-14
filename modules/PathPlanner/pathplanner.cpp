@@ -199,7 +199,6 @@ bool PathPlanner::readSpaceFromFile(const char *filename,unsigned _planningSteps
     if (!file)
     {
         LOG(Logger::Warning,"Can not open Search Space File")
-        fclose(file);
         return false;
     }
     // Read metadata line, it's expected to be the first line
@@ -265,7 +264,6 @@ bool PathPlanner::saveSpace2File(const char *filename)
     if (!file)
     {
         LOG(Logger::Warning,"Can not open Search Space File")
-        fclose(file);
         return false;
     }
     SearchSpaceNode *temp=search_space;

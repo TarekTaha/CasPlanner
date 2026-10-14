@@ -416,7 +416,7 @@ Node *Astar::makeChildrenNodes(Node *parent)
     Node  *p, *q;
     SearchSpaceNode *temp;
     double start_angle,end_angle,angle,angle_difference,discrete_angle,robot_angle,child_angle,angle_resolution = DTOR(10);
-    bool collides = FALSE;
+    bool collides = false;
     int direction;
     P.setX(parent->pose.p.x());
     P.setY(parent->pose.p.y());
@@ -466,7 +466,7 @@ Node *Astar::makeChildrenNodes(Node *parent)
         {
             direction = parent->direction;
         }
-        collides = FALSE;
+        collides = false;
         /* Discreatize the turning space and check for collison
                  * 1- Angle stored in the node is the direction of the PATH (NOT THE ROBOT)
                  * 2- If we were moving Forward then the Robot direction is the same as the Path

@@ -44,7 +44,7 @@
 
 inline std::ostream& operator<<(std::ostream& os, const QString& qs)
 {
-    os << qs.toAscii().data();
+    os << qs.toLatin1().constData();
     return os;
 }
 
@@ -77,7 +77,7 @@ public:
 
     QString getFilePath() const { return mFilePath; }
     void loggingPatch( const char* msg );
-    QtMsgHandler mDefaultMsgHandler;
+    QtMessageHandler mDefaultMsgHandler;
 Q_SIGNALS:
     void showMsg(int,QString);
 private:
@@ -167,12 +167,16 @@ private:
     #define qDebug() QDebugBlock::debug()
 #else //Q_NO_DEBUG
     #include <QDateTime>
+    #ifdef qDebug
+    #undef qDebug
+    #endif
     #define Q_DEBUG_BLOCK qDebug()
     class QDebugBlock { public: QDebugBlock( QString ) {} };
 
-    #define qDebug() qDebug() << QDateTime::currentDateTime().toUTC().toString( "dd/MM/yy hh:mm:ss" ).toLatin1().data() \
-                              <<" - "<< QString("%1").arg( (int)QThread::currentThreadId(), 10 ).toLatin1().data() \
-                              <<" - "<< __PRETTY_FUNCTION__ << '(' << __LINE__<< ") - L4 - "
+    #define qDebug() QMessageLogger(QT_MESSAGELOG_FILE, QT_MESSAGELOG_LINE, QT_MESSAGELOG_FUNC).debug() \
+                              << QDateTime::currentDateTime().toUTC().toString( "dd/MM/yy hh:mm:ss" ) \
+                              << " - " << QString("%1").arg( (qulonglong)QThread::currentThreadId(), 10 ) \
+                              << " - " << __PRETTY_FUNCTION__ << '(' << __LINE__ << ") - L4 - "
 
 #endif
 

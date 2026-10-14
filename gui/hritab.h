@@ -24,7 +24,7 @@
 #include <libplayerc++/playerc++.h>
 #include <libplayerinterface/player.h>
  
-#include <QtGui/QWidget>
+#include <QWidget>
 #include "ui_hritab.h"
 
 class RobotManager;

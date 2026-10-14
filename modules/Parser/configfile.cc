@@ -34,19 +34,14 @@
 #include <math.h>
 #include <locale.h>
 
-#include <replace.h>
+#include <linux/limits.h>
+#include <libgen.h>
 
-#include <libplayerinterface/interface_util.h>
-#include <libplayerinterface/player.h>
+#include "configfile.h"
 #include <libplayercommon/playercommon.h>
-#include <libplayercommon/error.h>
-#include <libplayercore/configfile.h>
-#include <libplayercore/driver.h>
-#include <libplayercore/drivertable.h>
-#include <libplayercore/devicetable.h>
-#include <libplayercore/globals.h>
-#include <libplayercore/plugins.h>
+#include <libplayerinterface/interface_util.h>
 #include <libplayerinterface/addr_util.h>
+#include <libplayercommon/error.h>
 
 //extern int global_playerport;
 
@@ -2047,88 +2042,13 @@ ConfigFile::ParseAllDrivers()
   return(true);
 }
 
-// Parse a driver block, and update the deviceTable accordingly
+// Player server driver loading. CasPlanner is a client and does not
+// instantiate Player drivers; configuration sections are read directly.
 bool 
 ConfigFile::ParseDriver(int section)
 {
-  const char *pluginname;  
-  const char *drivername;
-  DriverEntry *entry;
-  Driver *driver;
-  Device *device;
-  int count;
-
-  entry = NULL;
-  driver = NULL;
-  
-  // Load any required plugins
-  pluginname = this->ReadString(section, "plugin", NULL);
-  if (pluginname != NULL)
-  {
-    if(!LoadPlugin(pluginname,this->filename))
-    {
-      PLAYER_ERROR1("failed to load plugin: %s", pluginname);
-      return (false);
-    }
-  }
-
-  // Get the driver name
-  drivername = this->ReadString(section, "name", NULL);
-  if (drivername == NULL)
-  {
-    PLAYER_ERROR1("No driver name specified in section %d", section);
-    return (false);
-  }
-  
-  // Look for the driver
-  entry = driverTable->GetDriverEntry(drivername);
-  if (entry == NULL)
-  {
-    PLAYER_ERROR1("Couldn't find driver \"%s\"", drivername);
-    return (false);
-  }
-
-  // Create a new-style driver
-  if (entry->initfunc == NULL)
-  {
-    PLAYER_ERROR1("Driver has no initialization function \"%s\"", drivername);
-    return (false);
-  }
-
-  // Create a driver; the driver will add entries into the device
-  // table
-  driver = (*(entry->initfunc)) (this, section);
-  if (driver == NULL || driver->GetError() != 0)
-  {
-    PLAYER_ERROR1("Initialization failed for driver \"%s\"", drivername);
-    return (false);
-  }
-
-  // Fill out the driver name in the device table and count the number
-  // of devices for this driver
-  count = 0;
-  for (device = deviceTable->GetFirstDevice(); device != NULL;
-       device = deviceTable->GetNextDevice(device))
-  {
-    if (device->driver == driver)
-    {
-      strncpy(device->drivername, drivername, sizeof(device->drivername));
-      count++;
-    }
-  }
-
-  // We must have at least one interface per driver
-  if (count == 0)
-  {
-    PLAYER_ERROR1("Driver has no (usable) interfaces \"%s\"", drivername);
-    return false;
-  }
-  
-  // Should this device be "always on"?  
-  if (driver)
-    driver->alwayson = this->ReadInt(section, "alwayson", driver->alwayson);
-
-  return true;
+  PLAYER_ERROR1("ParseDriver is not available in the CasPlanner client (section %d)", section);
+  return false;
 }
 
 

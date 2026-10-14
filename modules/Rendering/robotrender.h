@@ -18,8 +18,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Steet, Fifth Floor, Boston, MA  02111-1307, USA.          *
  ***************************************************************************/
-#ifndef LASERRENDER_H
-#define LASERRENDER_H
+#ifndef ROBOTRENDER_H
+#define ROBOTRENDER_H
 
 #include "glrender.h"
 #include "robot.h"

@@ -36,23 +36,46 @@ any recommendations or suggestions are welcomed.
 
 Dependencies
 ------------
-   - CMake 2.4 and greater
-   - PlayerStage 3.1.0 or greater, ORCA will be supported soon.
-   - QT4.2.x or greater (with QtQl module)
-   - BlueTooth - bluez lib, for accelerometer integration.
-   - OpenGL library support with FREE-GLUT library.
-   - FreeType library (for rendering text in OpenGL).
+   - Docker with Compose, for the supported way to build and run.
+   - A host display (X11 or XWayland). The containers draw on that display.
+   - Player 3.0.2 and Stage 4.3.0, built from source by the image.
+   - Qt 5, OpenGL, FreeGLUT, FreeType, and BlueZ, installed inside the image.
 
-Installation
-------------
-For most people, the following sequence should be enough unless you have a missing dependency,
-from inside the project root folder do the following:
+The image builds Player and Stage itself. It does not use distribution Player packages.
 
-        $ mkdir build
-        $ cd build
-        $ cmake ..
-        $ make
-This will generate a CasPlanner binary file in the project main folder
+Running with Docker
+-------------------
+From the project root, once per login:
+
+        $ xhost +local:root
+        $ docker compose up --build
+
+That builds `casplanner:local`, starts Stage with `StageSim/casarea.cfg`, and opens
+CasPlanner on `wheelchair.cfg`. Two windows should appear: the Stage world
+(`cas.world`) and `CAS Navigation System`.
+
+`wheelchair.cfg` leaves `startConnected` at 0, so click Connect Robot after both
+windows are up. The client talks to Player on `127.0.0.1:6665`. Stage also listens
+on 6666 and 6667 for the other simulated robots.
+
+Lines such as `Failed to query drm device` and `failed to load driver: iris` come
+from software OpenGL inside the container. The program keeps running after them.
+
+Stage 4 no longer has a `laser` model. `StageSim/hokuyo.inc` and `StageSim/sick.inc`
+describe rangers, and `casarea.cfg` uses Player's `rangertolaser` driver so
+CasPlanner's laser interface is unchanged.
+
+Installation from source
+------------------------
+A native build needs the same libraries the image installs, plus a Player tree
+built from source. Point CMake at it with `-DPLAYER_ROOT=/usr/local` (or another
+prefix that contains `include/player-3.0/playerconfig.h`). From the project root:
+
+        $ cmake -S . -B build -DPLAYER_ROOT=/usr/local
+        $ cmake --build build
+This writes the `CasPlanner` binary in the project root. Run it with:
+
+        $ ./CasPlanner wheelchair.cfg
 
 Config File
 ------------

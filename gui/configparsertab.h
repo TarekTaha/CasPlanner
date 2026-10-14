@@ -21,7 +21,7 @@
 #ifndef CONFIGPARSERTAB_H
 #define CONFIGPARSERTAB_H
 
-#include <QtGui/QWidget>
+#include <QWidget>
 #include "ui_configparsertab.h"
 
 class ConfigParserTab : public QWidget

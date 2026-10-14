@@ -1,0 +1,5 @@
+build/
+CasPlanner
+log.txt
+*.o
+*.a

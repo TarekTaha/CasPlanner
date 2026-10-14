@@ -1,4 +1,5 @@
 #include "accelerometer.h"
+#include <unistd.h>
 
 Accelerometer::Accelerometer():
 connected(false)

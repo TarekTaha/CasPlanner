@@ -80,7 +80,6 @@ bool SocialPlanner::loadActivities(const char *filename)
     if (!file)
     {
         LOG(Logger::Critical,"Error Opening Activities File")
-        fclose(file);
         return false;
     }
     while (!feof(file))
@@ -185,7 +184,6 @@ bool SocialPlanner::readSpaceFromFile(const char *filename)
     if (!file)
     {
         LOG(Logger::Critical,"Error Opening SearchSpace File")
-        fclose(file);
         return false;
     }
     while (!feof(file))
@@ -223,7 +221,6 @@ bool SocialPlanner::saveSpace2File(const char *filename)
     if (!file)
     {
         LOG(Logger::Critical,"Error Opening SearchSpace File for saving")
-        fclose(file);
         return false;
     }
     SearchSpaceNode *temp=astar->search_space;

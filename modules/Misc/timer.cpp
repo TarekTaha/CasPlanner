@@ -19,6 +19,7 @@
  *   51 Franklin Steet, Fifth Floor, Boston, MA  02111-1307, USA.          *
  ***************************************************************************/
 #include "timer.h"
+#include <unistd.h>
 
 Timer::Timer()
 {

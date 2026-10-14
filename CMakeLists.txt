@@ -1,38 +1,77 @@
-# set project's name
-PROJECT( CasPlanner )
+cmake_minimum_required(VERSION 3.16)
+project(CasPlanner C CXX)
 
-cmake_minimum_required(VERSION 2.4)
+# CasPlanner 1.0 was built against Qt 4, Player 3.0 and a 32-bit Pentium-M
+# toolchain. This file keeps that same program, but builds it with Qt 5 and
+# the host compiler. PLAYER_ROOT is a Player tree built from source
+# (the Docker image installs one under /usr/local). If that is absent, the
+# unpacked libraries in CASPLANNER_DEPS are used.
+if(NOT CASPLANNER_DEPS)
+    if(DEFINED ENV{CASPLANNER_DEPS})
+        set(CASPLANNER_DEPS "$ENV{CASPLANNER_DEPS}" CACHE PATH "Directory holding unpacked build dependencies")
+    else()
+        set(CASPLANNER_DEPS "$ENV{HOME}/.local/casplanner-deps" CACHE PATH "Directory holding unpacked build dependencies")
+    endif()
+endif()
+set(PLAYER_ROOT "" CACHE PATH "Prefix of a Player installation built from source")
 
-SET( CasPlanner_MOC_HDRS
-    ./modules/CommManager/commmanager.h
-    ./modules/CommManager/comms.h
-    ./modules/Rendering/glrender.h
-    ./modules/Rendering/laserrender.h
-    ./gui/planningsettings.h
-    ./gui/missioncontroltab.h
-    ./gui/hritab.h
-    ./gui/mainwindow.h
-    ./gui/playgroundtab.h
-    ./gui/statusbar.h
-    ./gui/tabcontainer.h
-    ./gui/loggerview.h
-    ./modules/Logger/logger.h
-    ./modules/Parser/settings.h
-    ./modules/Rendering/mapviewer.h
-    ./modules/Navigator/navigator.h
-    ./modules/Rendering/ogrender.h
-    ./modules/CommManager/playerinterface.h
-    ./modules/Parser/xmlparser.h
-    ./modules/PathPlanner/planningmanager.h
-    ./modules/PlayGround/playground.h
-    ./modules/PlayGround/robotmanager.h
-    ./modules/Rendering/robotrender.h
-    ./modules/Sensors/sensors.h
-    ./modules/TasksManager/tasksgui.h
-    ./modules/HumanRobotInteraction/IntentionRecognizer.h
-)
+if(PLAYER_ROOT AND EXISTS "${PLAYER_ROOT}/include/player-3.0/playerconfig.h")
+    set(PLAYER_INCLUDE "${PLAYER_ROOT}/include/player-3.0")
+    set(PLAYER_LIB_DIR "${PLAYER_ROOT}/lib")
+elseif(EXISTS "/usr/local/include/player-3.0/playerconfig.h")
+    set(PLAYER_INCLUDE "/usr/local/include/player-3.0")
+    set(PLAYER_LIB_DIR "/usr/local/lib")
+elseif(EXISTS "${CASPLANNER_DEPS}/player-cxx/include/libplayerc++/playerc++.h")
+    set(PLAYER_INCLUDE "${CASPLANNER_DEPS}/player/usr/include/player-3.0")
+    set(PLAYER_CXX_INCLUDE "${CASPLANNER_DEPS}/player-cxx/include")
+    set(PLAYER_LIB_DIR "${CASPLANNER_DEPS}/player/usr/lib")
+    set(PLAYER_CXX_LIB_DIR "${CASPLANNER_DEPS}/player-cxx/lib")
+else()
+    message(FATAL_ERROR "Player headers were not found. Set PLAYER_ROOT to a source install, or unpack Player into CASPLANNER_DEPS.")
+endif()
+if(NOT PLAYER_CXX_INCLUDE)
+    set(PLAYER_CXX_INCLUDE "${PLAYER_INCLUDE}")
+endif()
+if(NOT PLAYER_CXX_LIB_DIR)
+    set(PLAYER_CXX_LIB_DIR "${PLAYER_LIB_DIR}")
+endif()
 
-SET( CasPlanner_SRCS
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_SOURCE_DIR}/gui")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+set(DEPS_LIB_DIR "${CASPLANNER_DEPS}/root/usr/lib/x86_64-linux-gnu")
+set(DEPS_INCLUDE "${CASPLANNER_DEPS}/root/usr/include")
+if(EXISTS "${CASPLANNER_DEPS}/root/usr")
+    list(APPEND CMAKE_PREFIX_PATH "${CASPLANNER_DEPS}/root/usr")
+endif()
+
+find_package(Qt5 5.15 REQUIRED COMPONENTS Core Gui Widgets OpenGL Xml)
+find_package(OpenGL REQUIRED)
+find_package(Freetype REQUIRED)
+
+find_library(GLUT_LIBRARY glut PATHS "${DEPS_LIB_DIR}" REQUIRED)
+find_library(GLU_LIBRARY GLU PATHS "${DEPS_LIB_DIR}" /usr/lib/x86_64-linux-gnu REQUIRED)
+find_library(BLUETOOTH_LIBRARY bluetooth PATHS "${DEPS_LIB_DIR}" REQUIRED)
+
+set(CASPLANNER_RPATH "${PLAYER_CXX_LIB_DIR};${PLAYER_LIB_DIR}")
+if(EXISTS "${DEPS_LIB_DIR}")
+    list(APPEND CASPLANNER_RPATH "${DEPS_LIB_DIR}")
+endif()
+set(CMAKE_BUILD_RPATH "${CASPLANNER_RPATH}")
+set(CMAKE_INSTALL_RPATH "${CASPLANNER_RPATH}")
+# RUNPATH applies only to CasPlanner itself. libplayerc then needs
+# libplayerwkb and libplayerjpeg, so use DT_RPATH, which the loader also
+# searches for those indirect libraries.
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
+
+set(CasPlanner_SRCS
     ./modules/CommManager/commmanager.cpp
     ./modules/CommonTools/bandmat.cpp
     ./modules/CommonTools/cholesky.cpp
@@ -59,10 +98,10 @@ SET( CasPlanner_SRCS
     ./modules/CommonTools/sort.cpp
     ./modules/CommonTools/submat.cpp
     ./modules/CommonTools/svd.cpp
+    ./modules/Rendering/laserrender.cpp
     ./modules/Logger/logger.cpp
     ./modules/Parser/configfile.cc
     ./modules/Navigator/controller.cpp
-    ./modules/Rendering/laserrender.cpp
     ./gui/planningsettings.cpp
     ./gui/missioncontroltab.cpp
     ./gui/loggerview.cpp
@@ -134,112 +173,82 @@ SET( CasPlanner_SRCS
     ./modules/PathPlanner/heuristic.cpp
 )
 
-# UI .ui files
-SET(CasPlanner_UIS
+set(CasPlanner_UIS
     gui/hritab.ui
     gui/loggerview.ui
     gui/configparsertab.ui
     gui/missioncontroltab.ui
     gui/planningsettings.ui
-    )
-# Resources files
-SET(CasPlanner_RCS resources/icons.qrc)
+)
 
-# CDT Error Parser cannot handle error messages that span more than one line
-# which is the default gcc behavior. This is used to force gcc to generate single
-# line error messages with no line wrapping
-IF(CMAKE_COMPILER_IS_GNUCC)
-    SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -g -O0 -o -fmessage-length=0 -Wno-deprecated ")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+# Headers that declare Q_OBJECT. Listing them makes moc see classes that
+# are only included indirectly from the .cpp files.
+set(CasPlanner_MOC_HDRS
+    ./modules/CommManager/commmanager.h
+    ./modules/CommManager/comms.h
+    ./modules/Rendering/glrender.h
+    ./modules/Rendering/laserrender.h
+    ./gui/planningsettings.h
+    ./gui/missioncontroltab.h
+    ./gui/hritab.h
+    ./gui/mainwindow.h
+    ./gui/playgroundtab.h
+    ./gui/statusbar.h
+    ./gui/tabcontainer.h
+    ./gui/loggerview.h
+    ./modules/Logger/logger.h
+    ./modules/Parser/settings.h
+    ./modules/Rendering/mapviewer.h
+    ./modules/Navigator/navigator.h
+    ./modules/Rendering/ogrender.h
+    ./modules/CommManager/playerinterface.h
+    ./modules/Parser/xmlparser.h
+    ./modules/PathPlanner/planningmanager.h
+    ./modules/PlayGround/playground.h
+    ./modules/PlayGround/robotmanager.h
+    ./modules/Rendering/robotrender.h
+    ./modules/Sensors/sensors.h
+    ./modules/TasksManager/tasksgui.h
+    ./modules/HumanRobotInteraction/IntentionRecognizer.h
+)
 
-IF(CMAKE_COMPILER_IS_GNUCXX)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -o -fmessage-length=0 -Wno-deprecated")
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+add_executable(CasPlanner
+    ${CasPlanner_SRCS}
+    ${CasPlanner_MOC_HDRS}
+    ${CasPlanner_UIS}
+    resources/icons.qrc
+)
 
-# Optimization Level
-# Qt/boost signal/slot shit
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math -march=pentium-m -msse2 -mfpmath=sse -DQT_NO_KEYWORDS ")
+target_compile_options(CasPlanner PRIVATE
+    -Wall
+    -Wno-deprecated
+    -Wno-deprecated-declarations
+    -Wno-register
+    -Wno-unused-parameter
+    -fmessage-length=0
+    -fpermissive
+    -ffast-math
+    -fcommon
+)
 
-# enable warnings
-ADD_DEFINITIONS( -Wall )
+# QT_NO_KEYWORDS keeps the original Q_SIGNALS / Q_SLOTS style working
+# alongside identifiers that would otherwise collide with Qt macros.
+target_compile_definitions(CasPlanner PRIVATE QT_NO_KEYWORDS QT_NO_DEBUG)
 
-##################
-#    QT STUFF    #
-##################
+set(CASPLANNER_EXTRA_INCLUDES)
+if(EXISTS "/usr/include/tirpc/rpc/types.h")
+    list(APPEND CASPLANNER_EXTRA_INCLUDES /usr/include/tirpc)
+endif()
+if(EXISTS "${DEPS_INCLUDE}")
+    list(APPEND CASPLANNER_EXTRA_INCLUDES "${DEPS_INCLUDE}" "${DEPS_INCLUDE}/freetype2" "${DEPS_INCLUDE}/tirpc")
+endif()
 
-ADD_DEFINITIONS( ${QT_DEFINITIONS} )
-FIND_PACKAGE( Qt4 REQUIRED )
-
-SET(QT_USE_QTGUI TRUE )
-SET(QT_USE_QTOPENGL TRUE )
-SET(QT_USE_XML TRUE )
-SET(QT_USE_QTXMLPATTERNS TRUE)
-
-INCLUDE( ${QT_USE_FILE} )
-
-QT4_ADD_RESOURCES( CasPlanner_RC_SRCS ${CasPlanner_RCS} )
-
-# this will run uic on .ui files:
-QT4_WRAP_UI( CasPlanner_UI_HDRS ${CasPlanner_UIS} )
-
-# and finally this will run moc:
-QT4_WRAP_CPP( CasPlanner_MOC_SRCS ${CasPlanner_MOC_HDRS} )
-
-
-##################
-#  OPENGL STUFF  #
-##################
-INCLUDE(${CMAKE_ROOT}/Modules/FindOpenGL.cmake)
-
-##################
-#  PLAYER STUFF  #
-##################
-INCLUDE( ${CMAKE_ROOT}/Modules/FindPkgConfig.cmake )
-INCLUDE( ${CMAKE_ROOT}/Modules/UsePkgConfig.cmake )
-
-IF(PKG_CONFIG_FOUND)
-	pkg_check_modules(PLAYER REQUIRED playercore playerc++ playerc)
-ELSE(PKG_CONFIG_FOUND)
-	MESSAGE("Cannot find pkg-config")
-ENDIF(PKG_CONFIG_FOUND)
-
-IF(PLAYER_FOUND)
-	#do something ?
-ELSE(PLAYER_FOUND)
-	MESSAGE("Cannot find playerstage version 2.1 or above")
-ENDIF(PLAYER_FOUND)
-
- ##########################
-#  BlueTooth/bluez STUFF #
-#########################
-
-IF(PKG_CONFIG_FOUND)
-        pkg_check_modules(BLUEZ REQUIRED bluez)
-ELSE(PKG_CONFIG_FOUND)
-        MESSAGE("Cannot find bluez using pkg-config")
-ENDIF(PKG_CONFIG_FOUND)
-
-IF(PLAYER_FOUND)
-        MESSAGE("Bluetooth Bluez Found")
-ELSE(PLAYER_FOUND)
-        MESSAGE("Cannot find playerstage version 2.1 or above")
-ENDIF(PLAYER_FOUND)
-
-include( cmake/FindFreeType.cmake )
-
-IF(FREETYPE_FOUND)
-    MESSAGE("FreeType Found")
-ELSE(FREETYPE_FOUND)
-    MESSAGE("Cannot find freetype lib")
-ENDIF(FREETYPE_FOUND)
-
-# we need this to be able to include headers produced by uic in our code
-INCLUDE_DIRECTORIES(
-    ${QT_INCLUDES}
-    ${OPENGL_INCLUDE_DIR}
-    ${CMAKE_BINARY_DIR}
-    ${PLAYER_INCLUDE_DIRS}
-    ${FREETYPE_INCLUDE_DIR_freetype2}
+target_include_directories(CasPlanner PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${PLAYER_CXX_INCLUDE}
+    ${PLAYER_INCLUDE}
+    ${CASPLANNER_EXTRA_INCLUDES}
+    ${FREETYPE_INCLUDE_DIRS}
     ./modules/Logger
     ./modules/PathPlanner
     ./modules/ObstacleAvoidance
@@ -248,7 +257,7 @@ INCLUDE_DIRECTORIES(
     ./modules/GeometricTools
     ./modules/Controller
     ./modules/CommManager
-    ./modules/CommonTools/
+    ./modules/CommonTools
     ./modules/MapManager
     ./modules/Navigator
     ./modules/Parser
@@ -262,17 +271,30 @@ INCLUDE_DIRECTORIES(
     ./modules/PomdpCore
     ./modules/HumanRobotInteraction
 )
-ADD_DEFINITIONS(-DQT_NO_DEBUG)
-# here we instruct CMake to build "CasPlanner" executable from all of the source files
-ADD_EXECUTABLE( ../CasPlanner ${CasPlanner_SRCS} ${CasPlanner_MOC_SRCS} ${CasPlanner_RC_SRCS} ${CasPlanner_UI_HDRS} )
 
-TARGET_LINK_LIBRARIES( ../CasPlanner
-    ${QT_QTGUI_LIBRARY}
-    ${QT_QTCORE_LIBRARY}
-    ${QT_QTOPENGL_LIBRARY}
-    ${QT_QTXML_LIBRARY}
-    ${QT_LIBRARIES}
-    ${PLAYER_LIBRARIES}
-    ${BLUEZ_LIBRARIES}
-    ${FREETYPE_LIBRARY}
+target_link_directories(CasPlanner PRIVATE
+    ${PLAYER_CXX_LIB_DIR}
+    ${PLAYER_LIB_DIR}
+    ${DEPS_LIB_DIR}
+)
+
+target_link_libraries(CasPlanner PRIVATE
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Widgets
+    Qt5::OpenGL
+    Qt5::Xml
+    OpenGL::GL
+    ${GLU_LIBRARY}
+    ${GLUT_LIBRARY}
+    ${FREETYPE_LIBRARIES}
+    ${BLUETOOTH_LIBRARY}
+    playerc++
+    playerc
+    playerinterface
+    playercommon
+    playerwkb
+    playerjpeg
+    m
+    pthread
 )

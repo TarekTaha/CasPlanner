@@ -25,13 +25,16 @@
 
 using namespace std;
 
-void loggingMsgHandler( QtMsgType   type, const char* msg )
+static void loggingMsgHandler(QtMsgType type, const QMessageLogContext &context, const QString &message)
 {
+    const QByteArray bytes = message.toLocal8Bit();
+    const char *msg = bytes.constData();
 #ifdef QT_NO_DEBUG
     // Release build, redirect to log file
     switch (type)
     {
         case QtDebugMsg:
+        case QtInfoMsg:
             Logger::getLogger().loggingPatch( msg );
             break;
         case QtWarningMsg:
@@ -42,33 +45,36 @@ void loggingMsgHandler( QtMsgType   type, const char* msg )
             break;
         case QtFatalMsg:
             LOG(Logger::Critical, msg);
-            Logger::getLogger().mDefaultMsgHandler(type, msg);
+            Logger::getLogger().mDefaultMsgHandler(type, context, message);
             break;
     }
 #else
     // Debug build, use default handler
-    QtMsgHandler& defHandler = Logger::getLogger().mDefaultMsgHandler;
+    QtMessageHandler& defHandler = Logger::getLogger().mDefaultMsgHandler;
     switch (type)
     {
         case QtDebugMsg:
-            defHandler(type, msg);
+        case QtInfoMsg:
+            defHandler(type, context, message);
             break;
         case QtWarningMsg:
         case QtCriticalMsg:
-            defHandler(type, msg);
+            defHandler(type, context, message);
             #ifdef ASSERT_ON_QT_WARNINGS
                 Q_ASSERT(!"Qt warning, might be a good idea to fix this");
             #endif
             break;
         case QtFatalMsg:
-            defHandler(type, msg);
+            defHandler(type, context, message);
             break;
     }
 #endif // QT_NO_DEBUG
 }
 
-static void defaultMsgHandler(QtMsgType   type, const char* msg )
+static void defaultMsgHandler(QtMsgType type, const QMessageLogContext &, const QString &message)
 {
+    const QByteArray bytes = message.toLocal8Bit();
+    const char *msg = bytes.constData();
     fprintf(stderr, "%s\n", msg);
     fflush(stderr);
     if (type == QtFatalMsg || (type == QtWarningMsg && (!qgetenv("QT_FATAL_WARNINGS").isNull())) )
@@ -120,7 +126,7 @@ void Logger::init( QString sFilename, bool bOverwrite)
     LOG(1, "*                                    CasPlanner v1.0")
     LOG(1, "******************************************************************************************")
     // Install message handler for dealing with qDebug output
-    mDefaultMsgHandler = qInstallMsgHandler(loggingMsgHandler);
+    mDefaultMsgHandler = qInstallMessageHandler(loggingMsgHandler);
     if (mDefaultMsgHandler == 0)
     {
         mDefaultMsgHandler = defaultMsgHandler;

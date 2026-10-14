@@ -20,6 +20,7 @@
  ***************************************************************************/
 #include "planningmanager.h"
 #include "settings.h"
+#include <QDir>
 #include "playground.h"
 #include "robotmanager.h"
 #include "statusbar.h"
@@ -362,6 +363,7 @@ void PlanningManager::generateSearchSpaceState(bool loadFromFile,bool overWriteC
     // with similar planning parameters and steps
     if(generateNewSearchSpace)
     {
+        QDir().mkpath("logs");
         LOG(Logger::Info,"Generating Space ...")
         LOG(Logger::Info,"PlanningSteps:"<<planningSteps)
         if(planningSteps & OBST_EXPAND)

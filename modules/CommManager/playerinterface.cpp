@@ -646,8 +646,7 @@ Map PlayerInterface::getMap()
     //uint8_t robotid = (uint8_t) map->cells[metadata_offset+1];
     int16_t mapposx, mapposy, mapposphi;
     uint32_t time_secs, time_usecs;
-    int8_t * mapdata;
-    assert(mapdata = (int8_t*)malloc(sizeof(int8_t) *map->GetHeight()* map->GetWidth()));
+    int8_t * mapdata = (int8_t*)malloc(sizeof(int8_t) * map->GetHeight() * map->GetWidth());
     map->GetMap(mapdata);
     //mapposx = (map->cells[metadata_offset+2] & 0x00ff) << 8;
     //mapposx |= (map->cells[metadata_offset+3] & 0xff);

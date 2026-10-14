@@ -70,7 +70,6 @@ bool VoronoiPathPlanner::readSpaceFromFile(const char *filename)
     if (!file)
     {
         LOG(Logger::Info,"Error Opening File")
-        fclose(file);
         return false;
     }
     while (!feof(file))
@@ -127,7 +126,6 @@ bool VoronoiPathPlanner::saveSpace2File(const char *filename)
     if (!file)
     {
         LOG(Logger::Info,"Error Opening File")
-        fclose(file);
         return false;
     }
     SearchSpaceNode *temp=search_space;

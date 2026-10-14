@@ -1483,7 +1483,7 @@ void MapViewer::saveImage()
 {
     bool ok;
     QString filename = QInputDialog::getText(this, "Image Capture","Enter a name for the Image:", QLineEdit::Normal,
-                                             QString::null, &ok);
+                                             QString(), &ok);
     const char * type = "PNG";
     sleep(1);
     if(ok && !filename.isEmpty())

@@ -1,0 +1,28 @@
+# Opens CasPlanner and the Stage simulator on the host display.
+# Once per login, allow these containers to connect:
+#   xhost +local:root
+services:
+  stage:
+    image: casplanner:local
+    working_dir: /opt/casplanner/StageSim
+    command: ["player", "casarea.cfg"]
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+      PLAYERPATH: /usr/local/lib
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: host
+  casplanner:
+    image: casplanner:local
+    build: .
+    working_dir: /opt/casplanner
+    command: ["./CasPlanner", "wheelchair.cfg"]
+    depends_on:
+      - stage
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+      QT_QPA_PLATFORM: xcb
+      QT_X11_NO_MITSHM: "1"
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    network_mode: host

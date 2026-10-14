@@ -20,8 +20,6 @@
  ***************************************************************************/
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#include <boost/signal.hpp>
-#include <boost/bind.hpp>
 #include <libplayerc++/playerc++.h>
 #include <libplayerinterface/player.h>
 

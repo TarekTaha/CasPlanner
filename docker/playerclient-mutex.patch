@@ -1,0 +1,41 @@
+--- a/client_libs/libplayerc++/playerclient.h
++++ b/client_libs/libplayerc++/playerclient.h
+@@ -72,24 +72,36 @@
+   #include <boost/bind.hpp>
+ #else
+-  // we have to define this so we don't have to
+-  // comment out all the instances of scoped_lock
+-  // in all the proxies
++  // Boost.Thread is not part of this build. Keep the same lock callsites,
++  // backed by a pthread mutex so concurrent proxy access stays safe.
++  #include <pthread.h>
+   namespace boost
+   {
+     class PLAYERCC_EXPORT thread
+     {
+       public:
+         thread() {};
+     };
+ 
+     class PLAYERCC_EXPORT mutex
+     {
++      pthread_mutex_t m;
+       public:
+-        mutex() {};
++        mutex() { pthread_mutex_init(&m, 0); }
++        ~mutex() { pthread_mutex_destroy(&m); }
++        mutex(const mutex&) { pthread_mutex_init(&m, 0); }
++        mutex& operator=(const mutex&) { return *this; }
+         class scoped_lock
+         {
+-          public: scoped_lock(mutex /*m*/) {};
++          pthread_mutex_t* pm;
++          public:
++            scoped_lock(mutex& mu) : pm(&mu.m) { pthread_mutex_lock(pm); }
++            ~scoped_lock() { pthread_mutex_unlock(pm); }
+         };
++        friend class scoped_lock;
+     };
+   }
+ 
+ #endif
