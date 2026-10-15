@@ -1,16 +1,23 @@
 # Opens CasPlanner and the Stage simulator on the host display.
-# Once per login, allow these containers to connect:
-#   xhost +local:root
+# Run this from a graphical session so DISPLAY and XAUTHORITY are set.
+# The login cookie is mounted into both containers; xhost is not required.
+x-display: &display
+  environment: &display-env
+    DISPLAY: ${DISPLAY:-:0}
+    XAUTHORITY: /tmp/.Xauthority
+    QT_X11_NO_MITSHM: "1"
+  volumes: &display-volumes
+    - /tmp/.X11-unix:/tmp/.X11-unix
+    - ${XAUTHORITY:?Set XAUTHORITY, or run docker compose from a graphical session}:/tmp/.Xauthority:ro
 services:
   stage:
     image: casplanner:local
     working_dir: /opt/casplanner/StageSim
     command: ["player", "casarea.cfg"]
     environment:
-      DISPLAY: ${DISPLAY:-:0}
+      <<: *display-env
       PLAYERPATH: /usr/local/lib
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+    volumes: *display-volumes
     network_mode: host
   casplanner:
     image: casplanner:local
@@ -20,9 +27,7 @@ services:
     depends_on:
       - stage
     environment:
-      DISPLAY: ${DISPLAY:-:0}
+      <<: *display-env
       QT_QPA_PLATFORM: xcb
-      QT_X11_NO_MITSHM: "1"
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+    volumes: *display-volumes
     network_mode: host

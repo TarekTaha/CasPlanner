@@ -29,10 +29,9 @@ The platform was built for the UTS wheelchair work. The same GUI can be pointed 
 
 ## Run it
 
-You need Docker with Compose, and a display the containers can draw on (X11 or XWayland). Once per login, allow local root clients to use that display, then build and start both processes:
+You need Docker with Compose, and a graphical session so `DISPLAY` and `XAUTHORITY` are set. Compose mounts the X11 socket and the login cookie into both containers, so the windows open without `xhost`.
 
 ```bash
-xhost +local:root
 docker compose up --build
 ```
 
