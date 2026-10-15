@@ -33,6 +33,7 @@ MapViewer::MapViewer(QWidget *parent,PlayGround *playG)
     step(1),
     playGround(playG),
     zoomFactor(15.5),
+    wheelAccumulator(0),
     xOffset(0),
     yOffset(0),
     zOffset(0),
@@ -1243,13 +1244,37 @@ void MapViewer::setShowPatchBorders(int state)
 
 void MapViewer::wheelEvent( QWheelEvent * event )
 {
-    int numDegrees = event->delta() / 8;
-    int numSteps = numDegrees / 15;
-    if(numSteps > 0)
-        zoomFactor /= 1.1;
-    else
-        zoomFactor *= 1.1;
-
+    // A notch is 120 units. Qt also delivers begin/end events whose
+    // delta is 0; treating those as a zoom step cancels the real one.
+    int dy = event->angleDelta().y();
+    int notch = 120;
+    if (dy == 0)
+    {
+        dy = event->pixelDelta().y();
+        notch = 40;
+    }
+    if (dy == 0)
+    {
+        event->accept();
+        return;
+    }
+    wheelAccumulator += dy;
+    bool changed = false;
+    while (wheelAccumulator >= notch)
+    {
+        zoomFactor /= 1.1f;
+        wheelAccumulator -= notch;
+        changed = true;
+    }
+    while (wheelAccumulator <= -notch)
+    {
+        zoomFactor *= 1.1f;
+        wheelAccumulator += notch;
+        changed = true;
+    }
+    if (changed)
+        updateGL();
+    event->accept();
 }
 
 void MapViewer::mouseDoubleClickEvent(QMouseEvent *me)

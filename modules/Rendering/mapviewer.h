@@ -128,6 +128,7 @@ Q_OBJECT
         PlayGround *playGround;
         int screenHeight;
         float zoomFactor;
+        int wheelAccumulator;
         float xOffset, yOffset, zOffset;
         float yaw, pitch;
         float aspectRatio;

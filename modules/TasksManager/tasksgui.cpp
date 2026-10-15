@@ -275,6 +275,7 @@ MapGL::MapGL(Map*og,TasksGui *tsg, QWidget *parent):
 	QGLWidget(QGLFormat(QGL::AlphaChannel), parent),
 	tasksGui(tsg),
 	zoomFactor(15),
+	wheelAccumulator(0),
 	xOffset(0),
 	yOffset(0),
 	zOffset(0),
@@ -344,12 +345,35 @@ void MapGL::config()
 
 void MapGL::wheelEvent( QWheelEvent * event )
 {
-    int numDegrees = event->delta() / 8;
-    int numSteps = numDegrees / 15;
-    if(numSteps > 0)
-        zoomFactor /= 1.1;
-    else
-        zoomFactor *= 1.1;
+    int dy = event->angleDelta().y();
+    int notch = 120;
+    if (dy == 0)
+    {
+        dy = event->pixelDelta().y();
+        notch = 40;
+    }
+    if (dy == 0)
+    {
+        event->accept();
+        return;
+    }
+    wheelAccumulator += dy;
+    bool changed = false;
+    while (wheelAccumulator >= notch)
+    {
+        zoomFactor /= 1.1f;
+        wheelAccumulator -= notch;
+        changed = true;
+    }
+    while (wheelAccumulator <= -notch)
+    {
+        zoomFactor *= 1.1f;
+        wheelAccumulator += notch;
+        changed = true;
+    }
+    if (changed)
+        updateGL();
+    event->accept();
 }
 
 void MapGL::mousePressEvent(QMouseEvent *me)

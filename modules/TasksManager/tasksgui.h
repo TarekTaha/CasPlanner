@@ -169,6 +169,7 @@ public:
 private:
     TasksGui *tasksGui;
     float zoomFactor;
+    int wheelAccumulator;
     float xOffset, yOffset, zOffset;
     float yaw, pitch;
     float aspectRatio;
